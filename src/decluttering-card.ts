@@ -149,10 +149,6 @@ abstract class DeclutteringElement extends LitElement {
       :host(.child-card-hidden) {
         display: none;
       }
-      :host([edit-mode='true']) {
-        display: block !important;
-        border: 1px solid var(--primary-color);
-      }
     `;
   }
 
@@ -391,8 +387,8 @@ class DeclutteringCardEditor extends LitElement implements LovelaceCardEditor {
 @customElement('decluttering-template')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class DeclutteringTemplate extends DeclutteringElement {
-  @property({ attribute: 'edit-mode', reflect: true }) editMode;
-  @state() private _previewMode = false;
+  @property({ type: Boolean, reflect: true }) preview = false;
+
   @state() private _template?: string;
 
   static getConfigElement(): HTMLElement {
@@ -417,6 +413,10 @@ class DeclutteringTemplate extends DeclutteringElement {
         margin: 8px;
         color: var(--primary-color);
       }
+      :host([preview]) {
+        display: block !important;
+        border: 1px solid var(--primary-color);
+      }
     `;
   }
 
@@ -428,28 +428,27 @@ class DeclutteringTemplate extends DeclutteringElement {
     this._setTemplateConfig(config, undefined);
   }
 
-  async connectedCallback(): Promise<void> {
-    super.connectedCallback();
-
-    this._previewMode = this.parentElement?.localName === 'hui-card-preview';
-    if (!this.editMode && !this._previewMode) {
-      this.setAttribute('hidden', '');
-    } else {
-      this.removeAttribute('hidden');
-    }
-  }
-
   protected render(): TemplateResult | void {
-    if (this._template) {
-      if (this._previewMode) return super.render();
-      if (this.editMode) {
-        return html`
-          <div class="badge">${this._template}</div>
-          ${super.render()}
-        `;
-      }
+    this.setVisibility(!this.preview);
+    if (this.preview) {
+      return html`
+        <div class="badge">${this._template}</div>
+        ${super.render()}
+      `;
     }
     return html``;
+  }
+
+  private setVisibility(hidden: boolean): void {
+    if (this.hasAttribute('hidden') !== hidden) {
+      this.toggleAttribute('hidden', hidden);
+      this.dispatchEvent(
+        new Event('card-visibility-changed', {
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    }
   }
 }
 
