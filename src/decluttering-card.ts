@@ -429,7 +429,7 @@ class DeclutteringTemplate extends DeclutteringElement {
   }
 
   protected render(): TemplateResult | void {
-    this.setVisibility(!this.preview);
+    this.setHidden(!this.preview);
     if (this.preview) {
       return html`
         <div class="badge">${this._template}</div>
@@ -439,7 +439,7 @@ class DeclutteringTemplate extends DeclutteringElement {
     return html``;
   }
 
-  private setVisibility(hidden: boolean): void {
+  private setHidden(hidden: boolean): void {
     if (this.hasAttribute('hidden') !== hidden) {
       this.toggleAttribute('hidden', hidden);
       this.dispatchEvent(
