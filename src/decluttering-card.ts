@@ -607,32 +607,30 @@ class DeclutteringTemplateEditor extends LitElement implements LovelaceCardEdito
   private _valueChanged(ev: CustomEvent): void {
     if (!this._config) return;
     const data = ev.detail.value;
-
-    this._config.template = data.template;
-    DeclutteringTemplateEditor.stubMember(data.thingType === 'card', this._config, 'card', {
+    const config = { ...this._config, template: data.template, default: data.default };
+    DeclutteringTemplateEditor.stubMember(data.thingType === 'card', config, 'card', {
       type: 'entity',
       entity: 'sun.sun',
     });
-    DeclutteringTemplateEditor.stubMember(data.thingType === 'row', this._config, 'row', {
+    DeclutteringTemplateEditor.stubMember(data.thingType === 'row', config, 'row', {
       entity: 'sun.sun',
     });
-    DeclutteringTemplateEditor.stubMember(data.thingType === 'element', this._config, 'element', {
+    DeclutteringTemplateEditor.stubMember(data.thingType === 'element', config, 'element', {
       type: 'icon',
       icon: 'mdi:weather-sunny',
       style: {
         color: 'yellow',
       },
     });
-    this._config.default = data.default;
-    this._fireConfigChanged();
+    this._fireConfigChanged(config);
   }
 
   private _cardChanged(ev: CustomEvent): void {
     ev.stopPropagation();
     if (!this._config) return;
 
-    this._config.card = ev.detail.config;
-    this._fireConfigChanged();
+    const config = { ...this._config, card: ev.detail.config };
+    this._fireConfigChanged(config);
   }
 
   private _cardPicked(ev: CustomEvent): void {
@@ -644,12 +642,12 @@ class DeclutteringTemplateEditor extends LitElement implements LovelaceCardEdito
     ev.stopPropagation();
     if (!this._config) return;
 
-    this._config.row = ev.detail.config;
-    this._fireConfigChanged();
+    const config = { ...this._config, row: ev.detail.config };
+    this._fireConfigChanged(config);
   }
 
-  private _fireConfigChanged(): void {
-    fireEvent(this, 'config-changed', { config: this._config });
+  private _fireConfigChanged(config: DeclutteringTemplateConfig): void {
+    fireEvent(this, 'config-changed', { config });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
