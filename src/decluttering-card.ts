@@ -183,6 +183,7 @@ abstract class DeclutteringElement extends LitElement {
     if (!thingType) {
       throw new Error('You must define one card, element, or row in the template');
     }
+
     const thingConfig = deepReplace(variables, templateConfig);
 
     this._thingConfig = thingConfig;
@@ -237,7 +238,6 @@ abstract class DeclutteringElement extends LitElement {
 
   protected render(): TemplateResult | void {
     if (!this._hass || !this._thing) return html``;
-    console.log('_visible' + this._visible);
     return html`
       <div id="root" ?hidden="${!this._visible}">${this._thing}</div>
     `;

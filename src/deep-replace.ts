@@ -16,6 +16,13 @@ export default (variables: VariablesConfig[] | undefined, templateConfig: Templa
   variableArray.forEach(variable => {
     const key = Object.keys(variable)[0];
     const value = Object.values(variable)[0];
+
+    // Vérifier si la variable est présente dans le tableau 'variables'
+    if (variables && !variables.some(v => Object.keys(v)[0] === key)) {
+      // Ignorer la variable si elle n'est pas présente
+      return;
+    }
+
     if (typeof value === 'number' || typeof value === 'boolean') {
       const rxp2 = new RegExp(`"\\[\\[${key}\\]\\]"`, 'gm');
       jsonConfig = jsonConfig.replace(rxp2, (value as unknown) as string);
