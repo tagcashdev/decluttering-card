@@ -21,6 +21,15 @@ import { getLovelaceConfig } from './utils';
 import { ResizeObserver } from 'resize-observer';
 import * as pjson from '../package.json';
 
+// Define interfaces for visibility conditions
+interface VisibilityCondition {
+  condition: string;
+  entity: string;
+  state: string;
+}
+
+type VisibilityConfig = VisibilityCondition[];
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const HELPERS = (window as any).loadCardHelpers ? (window as any).loadCardHelpers() : undefined;
 
@@ -132,16 +141,19 @@ function getThingType(templateConfig: TemplateConfig): LovelaceThingType | undef
 abstract class DeclutteringElement extends LitElement {
   @state() private _hass?: HomeAssistant;
   @state() private _thing?: LovelaceThing;
+  @state() private _visible = true;
 
   private _thingConfig?: LovelaceThingConfig;
   private _thingType?: LovelaceThingType;
   private _ro?: ResizeObserver;
   private _savedStyles?: Map<string, [string, string]>;
+  private _visibilityConfig?: VisibilityConfig;
 
   set hass(hass: HomeAssistant) {
     if (!hass) return;
     this._hass = hass;
     if (this._thing) this._thing.hass = hass;
+    this._evaluateVisibility();
   }
 
   static get styles(): CSSResult {
@@ -175,11 +187,32 @@ abstract class DeclutteringElement extends LitElement {
 
     this._thingConfig = thingConfig;
     this._thingType = thingType;
+    this._visibilityConfig = thingConfig.visibility as VisibilityConfig;
+
     DeclutteringElement._createThing(thingConfig, thingType, (thing: LovelaceThing) => {
       if (this._thingConfig === thingConfig) {
         this._setThing(thing, thingType === 'element' ? thingConfig.style : undefined);
       }
     });
+  }
+
+  private _evaluateVisibility(): void {
+    if (!this._hass || !this._visibilityConfig) return;
+
+    const visible = this._visibilityConfig.every((condition: VisibilityCondition) => {
+      if (condition.condition === 'state') {
+        const stateObj = this._hass?.states[condition.entity];
+        if (!stateObj) return false;
+        return stateObj.state === condition.state;
+      }
+      // Add more condition types here as needed
+      return true;
+    });
+
+    if (this._visible !== visible) {
+      this._visible = visible;
+      this.requestUpdate();
+    }
   }
 
   private _setThing(thing: LovelaceThing, style?: Record<string, string>): void {
@@ -204,9 +237,9 @@ abstract class DeclutteringElement extends LitElement {
 
   protected render(): TemplateResult | void {
     if (!this._hass || !this._thing) return html``;
-
+    console.log('_visible' + this._visible);
     return html`
-      <div id="root">${this._thing}</div>
+      <div id="root" ?hidden="${!this._visible}">${this._thing}</div>
     `;
   }
 
